@@ -91,6 +91,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 map?.isMyLocationEnabled = true
             }
         }
+
+        updateContacts()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -197,7 +199,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     fun updateContacts() {
-
         mkContactPoints.keys.forEach { it.remove() }
         mkContactPoints.clear()
 
@@ -211,7 +212,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 }
             }
         }
-
     }
 
     fun goToContact(coord: ContactCoord) {
@@ -331,7 +331,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val border = LocationBordersManager.LocationBorder.fetchLocationBorderByIndex(index)
 
         apiClient.fetchKeys(
-            lastUpdateTimestamp,
+            0,
             border.minLat,
             border.maxLat,
             border.minLng,
