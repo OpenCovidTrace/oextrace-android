@@ -149,9 +149,12 @@ object CryptoUtil {
     private fun bytesToInt(bytes: ByteArray): Int {
         var value = 0
 
-        bytes.forEach { byte ->
+        var ind = 0
+        while (ind < 4) {
+            val byte = bytes[4 - ind - 1].toInt() and 0xFF
             value = value shl 8
-            value = value or byte.toInt()
+            value = value or byte
+            ind ++
         }
 
         return value
