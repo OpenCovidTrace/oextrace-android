@@ -122,15 +122,15 @@ object CryptoUtil {
     fun decodeMetaData(encryptedData: ByteArray, metaKey: ByteArray): ContactMetaData {
         val data = decodeAES(encryptedData, getEncryptionKey(metaKey))
 
-        val timeInterval = bytesToInt(data.sliceArray(0..7))
+        val timeInterval = bytesToInt(data.sliceArray(0..3))
         val date = Date(timeInterval.toLong() * 1000)
 
         var coord: ContactCoord? = null
 
-        val latInt = bytesToInt(data.sliceArray(8..15))
+        val latInt = bytesToInt(data.sliceArray(4..7))
         if (latInt != Int.MAX_VALUE) {
-            val lngInt = bytesToInt(data.sliceArray(16..23))
-            val accuracy = bytesToInt(data.sliceArray(24..31))
+            val lngInt = bytesToInt(data.sliceArray(8..11))
+            val accuracy = bytesToInt(data.sliceArray(12..15))
 
             coord = ContactCoord(coordToDouble(latInt), coordToDouble(lngInt), accuracy)
         }
@@ -160,8 +160,11 @@ object CryptoUtil {
     private fun intToBytes(value: Int) =
         ByteBuffer.allocate(4).putInt(Integer.reverseBytes(value)).array()
 
-    fun getRollingId(dailyKey: ByteArray, date: Date): ByteArray {
-        return getRollingId(dailyKey, getEnIntervalNumber(date))
+    private fun getRollingId(dailyKey: ByteArray, date: Date): ByteArray {
+        val rpiKey = getEncryptionKey(dailyKey)
+        val enIntervalNumber = getEnIntervalNumber(date)
+
+        return getRollingId(rpiKey, enIntervalNumber)
     }
 
     fun match(rollingId: String, dayNumber: Int, dailyKey: ByteArray): Boolean {
@@ -185,8 +188,7 @@ object CryptoUtil {
         return KeysManager.getDailyKeys().filterKeys { it > lastDayNumber }.values.toList()
     }
 
-    private fun getRollingId(dailyKey: ByteArray, enIntervalNumber: Int): ByteArray {
-        val rpiKey = getEncryptionKey(dailyKey)
+    private fun getRollingId(rpiKey: ByteArray, enIntervalNumber: Int): ByteArray {
         var paddedData = rpiPrefix
         for (i in 6..11) {
             paddedData += 0

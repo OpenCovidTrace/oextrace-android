@@ -46,8 +46,8 @@ object QrContactsManager : PreferencesHolder("qr-contacts") {
 
                     key.meta?.let { metaKey ->
                         contact.metaData = CryptoUtil.decodeMetaData(
-                            contact.meta.toByteArray(),
-                            metaKey.toByteArray()
+                            contact.meta.base64DecodeByteArray(),
+                            metaKey.base64DecodeByteArray()
                         )
 
                         contact.metaData?.coord?.let {
