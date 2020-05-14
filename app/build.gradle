@@ -21,12 +21,12 @@ android {
             dimension "env"
             applicationIdSuffix ".dev"
             versionNameSuffix "-dev"
-            buildConfigField "String", "API_HOST", '"dev.opencovidtrace.org"'
+            buildConfigField "String", "API_HOST", '"dev.openexposuretrace.org"'
             resValue "string", "app_name", "OExTrace DEV"
         }
         prod {
             dimension "env"
-            buildConfigField "String", "API_HOST", '"opencovidtrace.org"'
+            buildConfigField "String", "API_HOST", '"openexposuretrace.org"'
             resValue "string", "app_name", "OExTrace"
         }
     }

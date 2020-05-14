@@ -29,7 +29,8 @@
 
     <!-- MapFragment -->
     <string name="record_contact">Record contact</string>
-    <string name="recorded_contact">Contact has been added to your contact history.</string>
+    <string name="contact_added">Contact has been added to your contact history.</string>
+    <string name="recorded_contact">The contact has been recorded!</string>
     <string name="qr_info">Please have the other person scan this QR code.</string>
     <string name="failed_get_token">Failed to get notifications token.</string>
     <string name="failed_generate_qr">Failed to generate QR.</string>
