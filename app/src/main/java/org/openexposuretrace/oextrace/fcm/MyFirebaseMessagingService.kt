@@ -112,7 +112,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             UPDATES_CHANNEL_ID
         )
             .setAutoCancel(true)
-            // TODO .setSmallIcon(R.drawable.ic_icon_24dp)
+            .setSmallIcon(R.drawable.ic_icon_24dp)
             .setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
             .setContentTitle(getString(R.string.app_name))
             .setContentText(message)
