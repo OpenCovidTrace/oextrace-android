@@ -256,7 +256,7 @@ class BleUpdatesService : Service() {
                 .setContentText(text)
                 .setContentTitle(getBluetoothState())
                 .setOngoing(true)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_bluetooth_black_24dp)
                 .setTicker(text)
                 .setWhen(System.currentTimeMillis())
                 .setContentIntent(pendingIntent)
