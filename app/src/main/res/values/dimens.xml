@@ -1,6 +1,7 @@
 <resources>
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="margin_regular">16dp</dimen>
+    <dimen name="margin_small">8dp</dimen>
 
     <dimen name="input_height">44dp</dimen>
     <dimen name="map_input_size">40dp</dimen>
