@@ -22,6 +22,7 @@
         android:background="@drawable/bg_rounded_button"
         android:contentDescription="@string/logs"
         android:src="@drawable/ic_bluetooth_black_24dp"
+        android:tint="@android:color/white"
         app:layout_constraintBottom_toTopOf="@id/recordContactButton"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -38,6 +39,7 @@
         android:textAlignment="center"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
+        android:textSize="@dimen/text_normal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
