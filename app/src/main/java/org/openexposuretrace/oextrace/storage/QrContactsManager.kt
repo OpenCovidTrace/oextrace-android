@@ -41,7 +41,7 @@ object QrContactsManager : PreferencesHolder("qr-contacts") {
             keysData.keys.filter {
                 it.day == contact.day
             }.forEach { key ->
-                if (CryptoUtil.match(contact.rollingId, contact.day, key.value.toByteArray())) {
+                if (CryptoUtil.match(contact.rollingId, contact.day, key.value.base64DecodeByteArray())) {
                     contact.exposed = true
 
                     key.meta?.let { metaKey ->
