@@ -16,6 +16,7 @@ object CryptoUtil {
 
     const val keyLength = 16
 
+    private const val intBytes = 4
     private const val daySeconds = 60 * 60 * 24
     private const val enIntervalSeconds = 60 * 10
     private const val coordPrecision = 1e7
@@ -150,8 +151,8 @@ object CryptoUtil {
         var value = 0
 
         var ind = 0
-        while (ind < 4) {
-            val byte = bytes[4 - ind - 1].toInt() and 0xFF
+        while (ind < intBytes) {
+            val byte = bytes[intBytes - ind - 1].toInt() and 0xFF
             value = value shl 8
             value = value or byte
             ind ++
@@ -161,7 +162,7 @@ object CryptoUtil {
     }
 
     private fun intToBytes(value: Int) =
-        ByteBuffer.allocate(4).putInt(Integer.reverseBytes(value)).array()
+        ByteBuffer.allocate(intBytes).putInt(Integer.reverseBytes(value)).array()
 
     private fun getRollingId(dailyKey: ByteArray, date: Date): ByteArray {
         val rpiKey = getEncryptionKey(dailyKey)
