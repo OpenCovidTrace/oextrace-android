@@ -79,9 +79,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     override fun onMapReady(map: GoogleMap?) {
         googleMap = map
         LocationUpdateManager.registerCallback { location ->
-            loadTracks(location)
-            loadDiagnosticKeys(location)
-
             activity?.runOnUiThread {
                 map?.moveCamera(
                     CameraUpdateFactory.newCameraPosition(
@@ -238,6 +235,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     override fun onResume() {
         super.onResume()
         updateUserTracks()
+
+        LocationUpdateManager.registerCallback { location ->
+            loadTracks(location)
+            loadDiagnosticKeys(location)
+        }
+
         mapView.onResume()
     }
 
