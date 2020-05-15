@@ -5,6 +5,7 @@ import android.bluetooth.le.*
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.ParcelUuid
+import android.util.Log
 import org.openexposuretrace.oextrace.data.ADV_TAG
 import org.openexposuretrace.oextrace.data.Enums
 import org.openexposuretrace.oextrace.data.SCAN_TAG
@@ -127,7 +128,7 @@ class DeviceManager(private val context: Context) {
 
                 override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
                     super.onMtuChanged(gatt, mtu, status)
-                    insertLogs(SCAN_TAG, "Mtu Changed $mtu status $status")
+                    Log.d(SCAN_TAG, "Mtu Changed $mtu status $status")
                     gatt?.discoverServices()
                 }
 
@@ -138,14 +139,14 @@ class DeviceManager(private val context: Context) {
                 ) {
                     when (newState) {
                         BluetoothProfile.STATE_CONNECTED -> {
-                            insertLogs(SCAN_TAG, "Device Connected ${device.address}")
+                            Log.d(SCAN_TAG, "Device Connected ${device.address}")
                             deviceConnectCallback(device, true)
                             val mtu = 32 + 3 // Maximum allowed 517 - 3 bytes do BLE
                             bluetoothGatt?.requestMtu(mtu)
 
                         }
                         BluetoothProfile.STATE_DISCONNECTED -> {
-                            insertLogs(SCAN_TAG, "Disconnected ${device.address}")
+                            Log.d(SCAN_TAG, "Disconnected ${device.address}")
                             deviceConnectCallback(device, false)
                             closeConnection()
                         }
@@ -346,9 +347,9 @@ class DeviceManager(private val context: Context) {
 
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                insertLogs(ADV_TAG, "Connected to ${device.address}")
+                Log.d(ADV_TAG, "Connected to ${device.address}")
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                insertLogs(ADV_TAG, "Disconnected from ${device.address}")
+                Log.d(ADV_TAG, "Disconnected from ${device.address}")
             }
         }
 

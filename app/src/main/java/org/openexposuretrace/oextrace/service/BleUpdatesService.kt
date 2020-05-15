@@ -166,6 +166,11 @@ class BleUpdatesService : Service() {
         val device = ConnectedDevice(result.device, result.rssi)
         if (foundDevices.firstOrNull { it == device } == null) {
             if (deviceManager.connectDevice(result, ::onBleDeviceConnect)) {
+                Log.d(
+                    SCAN_TAG,
+                    "Connecting to ${result.device.address}, RSSI ${result.rssi}"
+                )
+
                 foundDevices.add(device)
             }
         } else {
