@@ -1,6 +1,5 @@
 package org.openexposuretrace.oextrace.data
 
-import android.bluetooth.BluetoothDevice
 import android.location.Location
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -12,8 +11,6 @@ import kotlin.math.roundToInt
 
 const val ADV_TAG = "ADV"
 const val SCAN_TAG = "SCAN"
-
-data class ConnectedDevice(val device: BluetoothDevice, val rssi: Int)
 
 @Entity(tableName = "log_table")
 data class LogTableValue(

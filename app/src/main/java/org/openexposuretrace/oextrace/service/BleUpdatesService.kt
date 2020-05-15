@@ -19,7 +19,6 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import org.openexposuretrace.oextrace.MainActivity
 import org.openexposuretrace.oextrace.R
-import org.openexposuretrace.oextrace.data.ConnectedDevice
 import org.openexposuretrace.oextrace.data.Enums
 import org.openexposuretrace.oextrace.data.SCAN_TAG
 import org.openexposuretrace.oextrace.di.BluetoothManagerProvider
@@ -44,8 +43,8 @@ class BleUpdatesService : Service() {
     private var scanWorkTimer: Timer? = null
     private var scanPauseTimer: Timer? = null
 
-    /* Collection of devices found */
-    private val foundDevices = mutableSetOf<ConnectedDevice>()
+    private val peripherals = mutableMapOf<BluetoothDevice, PeripheralData>()
+
     private val deviceManager by BluetoothManagerProvider()
 
     private var bluetoothState: Int = -1
@@ -163,29 +162,30 @@ class BleUpdatesService : Service() {
     }
 
     private fun onBleDeviceFound(result: ScanResult) {
-        val device = ConnectedDevice(result.device, result.rssi)
-        if (foundDevices.firstOrNull { it == device } == null) {
-            if (deviceManager.connectDevice(result, ::onBleDeviceConnect)) {
+        peripherals[result.device]?.let { peripheralData ->
+            if (System.currentTimeMillis() - peripheralData.date.time < 5000) {
                 Log.d(
                     SCAN_TAG,
-                    "Connecting to ${result.device.address}, RSSI ${result.rssi}"
+                    "Not connecting to ${result.device.address}, duplicate RSSI ${result.rssi}"
                 )
 
-                foundDevices.add(device)
+                return
             }
-        } else {
+        }
+
+        peripherals[result.device] = PeripheralData(result.rssi, Date())
+        if (deviceManager.connectDevice(result, ::onBleDeviceConnect)) {
             Log.d(
                 SCAN_TAG,
-                "Not connecting to ${result.device.address}, duplicate RSSI ${result.rssi}"
+                "Connecting to ${result.device.address}, RSSI ${result.rssi}"
             )
         }
     }
 
     private fun onBleDeviceConnect(device: BluetoothDevice, result: Boolean) {
-        if (!result)
-            foundDevices.firstOrNull { it.device.address == device.address }?.let {
-                foundDevices.remove(it)
-            }
+        if (!result) {
+            peripherals.remove(device)
+        }
     }
 
     fun stopBleService(needStopSelf: Boolean = false) {
@@ -250,3 +250,6 @@ class BleUpdatesService : Service() {
     }
 
 }
+
+
+data class PeripheralData(val rssi: Int, val date: Date)
