@@ -24,7 +24,7 @@ import org.openexposuretrace.oextrace.data.UpdateUserTracksEvent
 import org.openexposuretrace.oextrace.di.api.ApiClientProvider
 import org.openexposuretrace.oextrace.ext.ifAllNotNull
 import org.openexposuretrace.oextrace.ext.text.dateFullFormat
-import org.openexposuretrace.oextrace.ext.ui.toast
+import org.openexposuretrace.oextrace.ext.ui.showInfo
 import org.openexposuretrace.oextrace.location.LocationUpdateManager
 import org.openexposuretrace.oextrace.storage.*
 import org.openexposuretrace.oextrace.ui.map.logs.LogsFragment
@@ -367,7 +367,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun showExposedNotification() {
-        toast(R.string.exposed_contact_message)
+        showInfo(R.string.exposed_contact_message)
     }
 
 }
