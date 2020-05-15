@@ -15,14 +15,15 @@ import android.location.LocationManager
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import org.openexposuretrace.oextrace.MainActivity
 import org.openexposuretrace.oextrace.R
 import org.openexposuretrace.oextrace.data.ConnectedDevice
 import org.openexposuretrace.oextrace.data.Enums
+import org.openexposuretrace.oextrace.data.SCAN_TAG
 import org.openexposuretrace.oextrace.di.BluetoothManagerProvider
 import org.openexposuretrace.oextrace.ext.access.isNotGranted
-import org.openexposuretrace.oextrace.ext.data.insertLogs
 import org.openexposuretrace.oextrace.ext.text.dateFullFormat
 import java.util.*
 
@@ -30,8 +31,6 @@ import java.util.*
 class BleUpdatesService : Service() {
 
     companion object {
-        private val TAG = BleUpdatesService::class.java.simpleName
-
         private const val SILENT_CHANNEL_ID = "silent_channel_ble"
         private const val NOTIFICATION_ID = 7856234
 
@@ -72,6 +71,7 @@ class BleUpdatesService : Service() {
             }
         }
     }
+
     private val tickReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (serviceIsRunningInForeground()) {
@@ -80,9 +80,7 @@ class BleUpdatesService : Service() {
         }
     }
 
-
     override fun onCreate() {
-        insertLogs("onCreate", TAG)
         (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).apply {
             notificationManager = this
             // Android O requires a Notification Channel.
@@ -99,55 +97,16 @@ class BleUpdatesService : Service() {
         registerReceiver(bluetoothReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
     }
 
-    private fun initScanWorkTimer() {
-        if (scanWorkTimer == null) {
-            scanWorkTimer = Timer()
-            val timerAlarmInterval: Long = (30 * 1000).toLong()//30 second
-            scanWorkTimer?.scheduleAtFixedRate(
-                object : TimerTask() {
-                    override fun run() {
-                        scanWorkTimer?.cancel()
-                        scanWorkTimer = null
-                        deviceManager.stopSearchDevices()
-                        initScanPauseTimer()
-
-                    }
-                },
-                timerAlarmInterval, timerAlarmInterval
-            )
-        }
-    }
-
-    private fun initScanPauseTimer() {
-        if (scanPauseTimer == null) {
-            scanPauseTimer = Timer()
-            val timerAlarmInterval: Long = (10 * 1000).toLong()//10 sec
-            scanPauseTimer?.scheduleAtFixedRate(
-                object : TimerTask() {
-                    override fun run() {
-                        scanPauseTimer?.cancel()
-                        scanPauseTimer = null
-                        deviceManager.startSearchDevices(::onBleDeviceFound, true)
-                        initScanWorkTimer()
-                    }
-                }, timerAlarmInterval, timerAlarmInterval
-            )
-        }
-    }
-
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        insertLogs("onStartCommand", TAG)
         return START_STICKY
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        insertLogs("onConfigurationChanged", TAG)
         changingConfiguration = true
     }
 
     override fun onBind(intent: Intent): IBinder? {
-        insertLogs("onBind", TAG)
         stopForeground(true)
         isRunningInInForegroundService = false
         changingConfiguration = false
@@ -155,7 +114,6 @@ class BleUpdatesService : Service() {
     }
 
     override fun onRebind(intent: Intent) {
-        insertLogs("onRebind", TAG)
         stopForeground(true)
         isRunningInInForegroundService = false
         changingConfiguration = false
@@ -163,7 +121,6 @@ class BleUpdatesService : Service() {
     }
 
     override fun onUnbind(intent: Intent): Boolean {
-        insertLogs("onUnbind", TAG)
         if (!changingConfiguration) {
             isRunningInInForegroundService = true
             startForeground(NOTIFICATION_ID, getNotification())
@@ -182,9 +139,7 @@ class BleUpdatesService : Service() {
         isRunningInInForegroundService = false
         unregisterReceiver(tickReceiver)
         unregisterReceiver(bluetoothReceiver)
-        insertLogs("onDestroy", TAG)
     }
-
 
     fun requestBleUpdates() {
         val locationManager =
@@ -194,12 +149,7 @@ class BleUpdatesService : Service() {
                 ?: false
         if (hasPermissions() && gpsEnabled) {
             startService(Intent(applicationContext, BleUpdatesService::class.java))
-            try {
-                deviceManager.startSearchDevices(::onBleDeviceFound)
-                initScanWorkTimer()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            deviceManager.startSearchDevices(::onBleDeviceFound)
         }
     }
 
@@ -219,7 +169,10 @@ class BleUpdatesService : Service() {
                 foundDevices.add(device)
             }
         } else {
-            insertLogs("Not connecting to ${result.device.address}, duplicate RSSI value.", TAG)
+            Log.d(
+                SCAN_TAG,
+                "Not connecting to ${result.device.address}, duplicate RSSI ${result.rssi}"
+            )
         }
     }
 
@@ -267,6 +220,7 @@ class BleUpdatesService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.setCategory(Notification.CATEGORY_SERVICE)
         }
+
         return builder.build()
     }
 
@@ -285,7 +239,6 @@ class BleUpdatesService : Service() {
     inner class LocalBinder : Binder() {
         val service: BleUpdatesService get() = this@BleUpdatesService
     }
-
 
     fun serviceIsRunningInForeground(): Boolean {
         return isRunningInInForegroundService
