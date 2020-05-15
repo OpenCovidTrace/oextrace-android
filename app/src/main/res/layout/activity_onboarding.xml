@@ -41,7 +41,7 @@
         android:layout_marginStart="@dimen/margin_regular"
         android:layout_marginEnd="@dimen/margin_regular"
         android:layout_marginBottom="@dimen/margin_regular"
-        android:background="@drawable/bg_rounded_button"
+        android:background="@drawable/bg_primary_button"
         android:textAlignment="center"
         android:textAllCaps="false"
         android:textColor="@android:color/white"

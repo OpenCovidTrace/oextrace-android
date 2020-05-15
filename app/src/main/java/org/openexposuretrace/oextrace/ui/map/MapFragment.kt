@@ -5,9 +5,9 @@ import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView
@@ -20,6 +20,7 @@ import org.greenrobot.eventbus.ThreadMode
 import org.openexposuretrace.oextrace.R
 import org.openexposuretrace.oextrace.data.ContactCoord
 import org.openexposuretrace.oextrace.data.LocationIndex
+import org.openexposuretrace.oextrace.data.UpdateLocationAccuracyEvent
 import org.openexposuretrace.oextrace.data.UpdateUserTracksEvent
 import org.openexposuretrace.oextrace.di.api.ApiClientProvider
 import org.openexposuretrace.oextrace.ext.ifAllNotNull
@@ -33,6 +34,7 @@ import org.openexposuretrace.oextrace.utils.CryptoUtil
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.math.roundToInt
 
 
 class MapFragment : Fragment(), OnMapReadyCallback {
@@ -43,7 +45,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private val apiClient by ApiClientProvider()
-    private lateinit var mapViewModel: MapViewModel
     private lateinit var mapView: MapView
     private var googleMap: GoogleMap? = null
 
@@ -56,29 +57,58 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        mapViewModel =
-            ViewModelProvider(this).get(MapViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_map, container, false)
 
         mapView = root.findViewById(R.id.map)
         mapView.onCreate(savedInstanceState)
 
         mapView.getMapAsync(this)
+
         return root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         EventBus.getDefault().register(this)
-        logsImageButton.setOnClickListener { showLogs() }
+        logsButton.setOnClickListener { showLogs() }
         recordContactButton.setOnClickListener { showQrCode() }
+
+        zoomInButton.setOnClickListener {
+            googleMap?.let { map ->
+                map.animateCamera(
+                    CameraUpdateFactory.zoomTo((map.cameraPosition.zoom.roundToInt() + 1).toFloat())
+                )
+            }
+        }
+
+        zoomOutButton.setOnClickListener {
+            googleMap?.let { map ->
+                map.animateCamera(
+                    CameraUpdateFactory.zoomTo((map.cameraPosition.zoom.roundToInt() - 1).toFloat())
+                )
+            }
+        }
+
+        myLocationButton.setOnClickListener {
+            LocationUpdateManager.getLastLocation()?.let { location ->
+                googleMap?.animateCamera(
+                    CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude))
+                )
+            }
+        }
     }
 
-    override fun onMapReady(map: GoogleMap?) {
+    override fun onMapReady(map: GoogleMap) {
         googleMap = map
+
+        map.uiSettings.isMapToolbarEnabled = false
+        map.uiSettings.isMyLocationButtonEnabled = false
+        map.uiSettings.isIndoorLevelPickerEnabled = false
+        map.uiSettings.isCompassEnabled = true
+
         LocationUpdateManager.registerCallback { location ->
             activity?.runOnUiThread {
-                map?.moveCamera(
+                map.moveCamera(
                     CameraUpdateFactory.newCameraPosition(
                         CameraPosition.Builder()
                             .target(LatLng(location.latitude, location.longitude))
@@ -86,7 +116,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                             .build()
                     )
                 )
-                map?.isMyLocationEnabled = true
+                map.isMyLocationEnabled = true
             }
         }
 
@@ -96,6 +126,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onUpdateUserTracksEvent(event: UpdateUserTracksEvent) {
         updateUserTracks()
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onUpdateUserTracksEvent(event: UpdateLocationAccuracyEvent) {
+        accuracyText.text = getString(R.string.accuracy_text, event.accuracy)
+        accuracyText.visibility = VISIBLE
     }
 
     private fun updateUserTracks() {
@@ -270,9 +306,15 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         mapView.onSaveInstanceState(outState)
     }
 
-    override fun onDestroy() {
+    override fun onDestroyView() {
         EventBus.getDefault().unregister(this)
+
+        super.onDestroyView()
+    }
+
+    override fun onDestroy() {
         mapView.onDestroy()
+
         super.onDestroy()
     }
 

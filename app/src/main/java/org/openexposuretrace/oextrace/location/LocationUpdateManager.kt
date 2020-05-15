@@ -2,6 +2,7 @@ package org.openexposuretrace.oextrace.location
 
 import android.location.Location
 import org.greenrobot.eventbus.EventBus
+import org.openexposuretrace.oextrace.data.UpdateLocationAccuracyEvent
 import org.openexposuretrace.oextrace.data.UpdateUserTracksEvent
 import org.openexposuretrace.oextrace.storage.*
 import org.openexposuretrace.oextrace.storage.TrackingManager.trackingIntervalMs
@@ -20,6 +21,10 @@ object LocationUpdateManager {
         callbacks.forEach { callback -> callback(location) }
         callbacks.clear()
 
+        if (EventBus.getDefault().hasSubscriberForEvent(UpdateLocationAccuracyEvent::class.java)) {
+            EventBus.getDefault().post(UpdateLocationAccuracyEvent(location.accuracy.toInt()))
+        }
+
         val now = System.currentTimeMillis()
         if (now - lastTrackingUpdate > trackingIntervalMs &&
             location.accuracy > 0 && location.accuracy < 30
@@ -30,8 +35,9 @@ object LocationUpdateManager {
 
             TrackingManager.addTrackingPoint(point)
 
-            if (EventBus.getDefault().hasSubscriberForEvent(UpdateUserTracksEvent::class.java))
+            if (EventBus.getDefault().hasSubscriberForEvent(UpdateUserTracksEvent::class.java)) {
                 EventBus.getDefault().post(UpdateUserTracksEvent())
+            }
 
             lastTrackingUpdate = now
 
