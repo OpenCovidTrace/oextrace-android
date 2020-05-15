@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.View.VISIBLE
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -38,11 +39,6 @@ import kotlin.math.roundToInt
 
 
 class MapFragment : Fragment(), OnMapReadyCallback {
-
-    companion object {
-        const val userPolylineColor: Int = 0xFF0000ff.toInt()
-        const val sickPolylineColor: Int = 0xFFF57F17.toInt()
-    }
 
     private val apiClient by ApiClientProvider()
     private lateinit var mapView: MapView
@@ -149,7 +145,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     .clickable(true)
                     .addAll(it)
             )?.let { polyline ->
-                polyline.color = userPolylineColor
+                polyline.color = ContextCompat.getColor(requireActivity(), R.color.colorPrimary)
                 userPolylines.add(polyline)
             }
         }
@@ -177,7 +173,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     .clickable(true)
                     .addAll(it)
             )?.let { polyline ->
-                polyline.color = sickPolylineColor
+                polyline.color = ContextCompat.getColor(requireActivity(), R.color.red)
                 this.sickPolylines.add(polyline)
             }
         }
