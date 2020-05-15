@@ -166,7 +166,7 @@ class BleUpdatesService : Service() {
             if (System.currentTimeMillis() - peripheralData.date.time < 5000) {
                 Log.d(
                     SCAN_TAG,
-                    "Not connecting to ${result.device.address}, duplicate RSSI ${result.rssi}"
+                    "Not connecting to ${result.device.address} yet"
                 )
 
                 return
