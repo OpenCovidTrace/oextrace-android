@@ -27,12 +27,16 @@ object CryptoUtil {
 
     private val random = SecureRandom()
 
+
     // MARK: - AES 128bit
 
     fun encodeAES(value: ByteArray, key: ByteArray) = AESEncryptor.encrypt(value, key)!!
 
     fun decodeAES(value: ByteArray, key: ByteArray) = AESEncryptor.decryptWithAES(value, key)!!
 
+
+    // MARK: - Apple/Google crypto spec:
+    // https://www.blog.google/documents/56/Contact_Tracing_-_Cryptography_Specification.pdf
 
     fun generateKey(size: Int): ByteArray {
         val bytes = ByteArray(size)
@@ -155,7 +159,7 @@ object CryptoUtil {
             val byte = bytes[intBytes - ind - 1].toInt() and 0xFF
             value = value shl 8
             value = value or byte
-            ind ++
+            ind++
         }
 
         return value
@@ -199,6 +203,7 @@ object CryptoUtil {
         }
         val eninBytes = intToBytes(enIntervalNumber)
         paddedData += eninBytes
+
         return encodeAES(paddedData, rpiKey)
     }
 

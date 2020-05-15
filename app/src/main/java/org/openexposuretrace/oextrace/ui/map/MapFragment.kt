@@ -51,7 +51,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     var userPolylines = mutableListOf<Polyline>()
     var sickPolylines = mutableListOf<Polyline>()
 
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -67,7 +66,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         mapView.getMapAsync(this)
         return root
     }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -118,9 +116,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 polyline.color = userPolylineColor
                 userPolylines.add(polyline)
             }
-
         }
-
     }
 
     private fun updateExtTracks() {
@@ -292,7 +288,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             border.minLng,
             border.maxLng
         ).enqueue(object : Callback<TracksData> {
-
             override fun onResponse(call: Call<TracksData>, response: Response<TracksData>) {
                 response.body()?.tracks?.let { tracks ->
                     LocationIndexManager.updateTracksIndex(index)
@@ -331,13 +326,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val border = LocationBordersManager.LocationBorder.fetchLocationBorderByIndex(index)
 
         apiClient.fetchKeys(
-            0,
+            lastUpdateTimestamp,
             border.minLat,
             border.maxLat,
             border.minLng,
             border.maxLng
         ).enqueue(object : Callback<KeysData> {
-
             override fun onResponse(call: Call<KeysData>, response: Response<KeysData>) {
                 response.body()?.let { data ->
                     LocationIndexManager.updateKeysIndex(index)
@@ -363,7 +357,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         goToContact(it)
                         updateContacts()
                     }
-
                 }
             }
 
