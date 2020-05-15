@@ -37,10 +37,10 @@ object CryptoUtil {
 
 
     // MARK: - Apple/Google crypto spec:
-    // https://www.blog.google/documents/56/Contact_Tracing_-_Cryptography_Specification.pdf
+    // https://covid19-static.cdn-apple.com/applications/covid19/current/static/contact-tracing/pdf/ExposureNotification-CryptographySpecificationv1.2.pdf
 
-    fun generateKey(size: Int): ByteArray {
-        val bytes = ByteArray(size)
+    fun generateKey(): ByteArray {
+        val bytes = ByteArray(KEY_LENGTH)
 
         random.nextBytes(bytes)
 
@@ -72,14 +72,12 @@ object CryptoUtil {
 
     fun getDayNumber(date: Date) = getDayNumber(date.time)
 
-    fun currentDayNumber() = (getTimestamp() / DAY_SECONDS).toInt()
+    fun currentDayNumber() = ((System.currentTimeMillis() / 1000) / DAY_SECONDS).toInt()
 
     private fun getEnIntervalNumber(date: Date) =
         getEnIntervalNumber((date.time / 1000).toInt())
 
     private fun getEnIntervalNumber(timeInterval: Int): Int = timeInterval / EN_INTERVAL_SECONDS
-
-    private fun getTimestamp() = System.currentTimeMillis() / 1000
 
     fun getDailyKeys(dayNumber: Int): Pair<ByteArray, ByteArray> {
         val dailyKeys = KeysManager.getDailyKeys()
@@ -91,8 +89,8 @@ object CryptoUtil {
             }
         }
 
-        val dailyKey = generateKey(32)
-        val metaKey = generateKey(32)
+        val dailyKey = generateKey()
+        val metaKey = generateKey()
 
         dailyKeys[dayNumber] = dailyKey
         metaKeys[dayNumber] = metaKey
@@ -103,7 +101,7 @@ object CryptoUtil {
         return Pair(dailyKey, metaKey)
     }
 
-    fun getMetaData(date: Date, metaKey: ByteArray): ByteArray {
+    private fun getMetaData(date: Date, metaKey: ByteArray): ByteArray {
         val timeInterval = (date.time / 1000).toInt()
 
         var data = intToBytes(timeInterval)
@@ -191,7 +189,7 @@ object CryptoUtil {
         return false
     }
 
-    fun getLatestDailyKeys(): List<ByteArray> {
+    private fun getLatestDailyKeys(): List<ByteArray> {
         val lastDayNumber = currentDayNumber() - DataManager.maxDays
 
         return KeysManager.getDailyKeys().filterKeys { it > lastDayNumber }.values.toList()
