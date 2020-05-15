@@ -44,7 +44,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private lateinit var mapView: MapView
     private var googleMap: GoogleMap? = null
 
-    private var mkContactPoints: HashMap<Marker, QrContact> = hashMapOf()
+    private var mkContactPoints = mutableListOf<Marker>()
+
     var userPolylines = mutableListOf<Polyline>()
     var sickPolylines = mutableListOf<Polyline>()
 
@@ -227,8 +228,26 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     fun updateContacts() {
-        mkContactPoints.keys.forEach { it.remove() }
+        mkContactPoints.forEach { it.remove() }
         mkContactPoints.clear()
+
+        BtContactsManager.getContacts().values.forEach { contact ->
+            contact.encounters.forEach { encounter ->
+                ifAllNotNull(encounter.metaData, encounter.metaData?.coord) { metaData, coord ->
+                    googleMap?.addMarker(
+                        MarkerOptions().position(coord.coordinate())
+                            .title(
+                                getString(
+                                    R.string.contact_at_date,
+                                    metaData.date.dateFullFormat()
+                                )
+                            )
+                    )?.let {
+                        mkContactPoints.add(it)
+                    }
+                }
+            }
+        }
 
         QrContactsManager.getContacts().forEach { contact ->
             ifAllNotNull(contact.metaData, contact.metaData?.coord) { metaData, coord ->
@@ -236,7 +255,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     MarkerOptions().position(coord.coordinate())
                         .title(getString(R.string.contact_at_date, metaData.date.dateFullFormat()))
                 )?.let {
-                    mkContactPoints[it] = contact
+                    mkContactPoints.add(it)
                 }
             }
         }
