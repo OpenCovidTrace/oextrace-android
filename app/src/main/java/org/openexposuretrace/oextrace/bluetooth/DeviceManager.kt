@@ -221,8 +221,8 @@ class DeviceManager(private val context: Context) {
         )
         val data = characteristic.value
 
-        val rollingId = data.sliceArray(0 until CryptoUtil.keyLength).base64EncodedString()
-        val meta = data.sliceArray(CryptoUtil.keyLength until CryptoUtil.keyLength * 2)
+        val rollingId = data.sliceArray(0 until CryptoUtil.KEY_LENGTH).base64EncodedString()
+        val meta = data.sliceArray(CryptoUtil.KEY_LENGTH until CryptoUtil.KEY_LENGTH * 2)
             .base64EncodedString()
         deviceStatusListener?.onDataReceived(scanResult.device, characteristic.value)
 

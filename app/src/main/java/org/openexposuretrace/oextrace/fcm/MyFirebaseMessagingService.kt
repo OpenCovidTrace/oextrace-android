@@ -75,11 +75,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
                     val rollingId =
                         CryptoUtil.decodeAES(
-                            secretData.sliceArray(0 until CryptoUtil.keyLength),
+                            secretData.sliceArray(0 until CryptoUtil.KEY_LENGTH),
                             key
                         )
                     val meta = CryptoUtil.decodeAES(
-                        secretData.sliceArray(CryptoUtil.keyLength until CryptoUtil.keyLength * 2),
+                        secretData.sliceArray(CryptoUtil.KEY_LENGTH until CryptoUtil.KEY_LENGTH * 2),
                         key
                     )
 

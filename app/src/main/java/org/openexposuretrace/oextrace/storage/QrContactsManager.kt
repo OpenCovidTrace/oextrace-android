@@ -88,8 +88,8 @@ data class QrContact(
             val rpiData = rpi.base64DecodeByteArray()
 
             return QrContact(
-                rpiData.sliceArray(0 until CryptoUtil.keyLength).base64EncodedString(),
-                rpiData.sliceArray(CryptoUtil.keyLength until CryptoUtil.keyLength * 2)
+                rpiData.sliceArray(0 until CryptoUtil.KEY_LENGTH).base64EncodedString(),
+                rpiData.sliceArray(CryptoUtil.KEY_LENGTH until CryptoUtil.KEY_LENGTH * 2)
                     .base64EncodedString()
             )
         }
