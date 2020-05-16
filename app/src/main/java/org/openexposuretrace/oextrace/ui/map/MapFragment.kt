@@ -367,7 +367,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     }
 
                     TracksManager.addTracks(tracksFiltered)
-                    updateExtTracks()
+
+                    activity?.runOnUiThread {
+                        updateExtTracks()
+                    }
                 }
             }
 
