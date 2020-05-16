@@ -18,6 +18,7 @@ import org.openexposuretrace.oextrace.MainActivity
 import org.openexposuretrace.oextrace.R
 import org.openexposuretrace.oextrace.location.LocationAccessManager
 import org.openexposuretrace.oextrace.location.LocationUpdateManager
+import org.openexposuretrace.oextrace.storage.UserSettingsManager
 
 class TrackingService : Service() {
 
@@ -54,17 +55,24 @@ class TrackingService : Service() {
         Log.i(TAG, "Start Command")
 
         var foreground = false
-        if (LocationAccessManager.authorized(this)) {
-            LocationAccessManager.addConsumer(
-                this,
-                TRACKING_LOCATION_REQUEST,
-                trackingLocationCallback
-            )
 
-            foreground = true
-            Log.i(TAG, "Tracking enabled")
+        if (UserSettingsManager.recordTrack) {
+            if (LocationAccessManager.authorized(this)) {
+                LocationAccessManager.addConsumer(
+                    this,
+                    TRACKING_LOCATION_REQUEST,
+                    trackingLocationCallback
+                )
+
+                foreground = true
+                Log.i(TAG, "Tracking enabled")
+            } else {
+                Log.w(TAG, "Failed to request tracking location updates")
+            }
         } else {
-            Log.i(TAG, "Failed to request tracking location updates")
+            stopTrackingUpdates()
+
+            Log.i(TAG, "Tracking is off")
         }
 
         if (foreground) {

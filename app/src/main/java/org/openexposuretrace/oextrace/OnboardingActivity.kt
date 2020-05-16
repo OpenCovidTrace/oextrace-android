@@ -12,6 +12,7 @@ import org.openexposuretrace.oextrace.MainActivity.Companion.REQUEST_LOCATION
 import org.openexposuretrace.oextrace.OnboardingActivity.Extra.STAGE_EXTRA
 import org.openexposuretrace.oextrace.storage.OnboardingManager
 import org.openexposuretrace.oextrace.storage.OnboardingStage
+import org.openexposuretrace.oextrace.storage.UserSettingsManager
 
 class OnboardingActivity : AppCompatActivity() {
 
@@ -49,11 +50,15 @@ class OnboardingActivity : AppCompatActivity() {
 
                     goNext(OnboardingStage.LOCATION)
                 }
-                OnboardingStage.LOCATION -> ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(permission.ACCESS_FINE_LOCATION),
-                    REQUEST_LOCATION
-                )
+                OnboardingStage.LOCATION -> {
+                    UserSettingsManager.recordTrack = true
+
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(permission.ACCESS_FINE_LOCATION),
+                        REQUEST_LOCATION
+                    )
+                }
             }
         }
     }

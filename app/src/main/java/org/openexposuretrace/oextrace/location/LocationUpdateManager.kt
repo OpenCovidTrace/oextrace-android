@@ -26,8 +26,10 @@ object LocationUpdateManager {
         }
 
         val now = System.currentTimeMillis()
-        if (now - lastTrackingUpdate > trackingIntervalMs &&
-            location.accuracy > 0 && location.accuracy < 30
+        if (
+            now - lastTrackingUpdate > trackingIntervalMs &&
+            location.accuracy > 0 && location.accuracy < 30 &&
+            UserSettingsManager.recordTrack
         ) {
             println("Updating tracking location")
 
@@ -41,7 +43,7 @@ object LocationUpdateManager {
 
             lastTrackingUpdate = now
 
-            if (UserStatusManager.sick()) {
+            if (UserSettingsManager.uploadTrack) {
                 TracksManager.uploadNewTracks()
             }
         }
