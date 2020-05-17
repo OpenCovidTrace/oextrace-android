@@ -162,7 +162,8 @@ class DeviceManager(private val context: Context) {
                 }
 
                 override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-                    insertLogs(SCAN_TAG, "Device discovered ${device.address}")
+                    Log.d(SCAN_TAG, "Device discovered ${device.address}")
+
                     var hasServiceAndCharacteristic = false
                     val service = gatt.getService(SERVICE_UUID)
                     if (service != null) {
@@ -227,7 +228,7 @@ class DeviceManager(private val context: Context) {
 
         insertLogs(
             SCAN_TAG,
-            "Recorded a contact with ${scanResult.device.address} RSSI ${scanResult.rssi}"
+            "Received RPI from ${scanResult.device.address} RSSI ${scanResult.rssi}"
         )
 
         closeConnection()
@@ -391,12 +392,14 @@ class DeviceManager(private val context: Context) {
 
         override fun onExecuteWrite(device: BluetoothDevice?, requestId: Int, execute: Boolean) {
             super.onExecuteWrite(device, requestId, execute)
-            insertLogs(ADV_TAG, "Execute Write ${device?.address ?: ""}")
+
+            Log.d(ADV_TAG, "Execute Write ${device?.address ?: ""}")
         }
     }
 
     fun stopServer() {
         insertLogs(ADV_TAG, "Stop gatt server")
+
         bluetoothGattServer?.close()
     }
 
