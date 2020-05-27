@@ -112,6 +112,8 @@ class BleUpdatesService : Service() {
 
     override fun onDestroy() {
         unregisterReceiver(bluetoothReceiver)
+
+        stopBleService()
     }
 
     private fun startScanning() {
