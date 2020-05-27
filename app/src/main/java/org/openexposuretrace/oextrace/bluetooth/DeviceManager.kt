@@ -28,9 +28,6 @@ class DeviceManager(private val context: Context) {
     private var bluetoothManager: BluetoothManager =
         context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 
-    // To provide bluetooth communication
-    private var bluetoothGatt: BluetoothGatt? = null
-
     private var scanCallback: ScanCallback? = null
     private var bluetoothGattServer: BluetoothGattServer? = null
     private var scanActive = false
@@ -112,23 +109,18 @@ class DeviceManager(private val context: Context) {
     /**
      * Arrange connection to the selected device, and read characteristics of the identified device type
      */
-    fun connectDevice(
-        scanResult: ScanResult,
-        deviceConnectCallback: (BluetoothDevice, Boolean) -> Unit
-    ): Boolean {
+    fun connectDevice(scanResult: ScanResult): Boolean {
         val device = scanResult.device
-        if (isDeviceConnected()) {
-            return false
-        }
 
-        bluetoothGatt = device.connectGatt(
+        device.connectGatt(
             context,
             false,
             object : BluetoothGattCallback() {
-
                 override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
                     super.onMtuChanged(gatt, mtu, status)
+
                     Log.d(SCAN_TAG, "Mtu Changed $mtu status $status")
+
                     gatt?.discoverServices()
                 }
 
@@ -140,23 +132,16 @@ class DeviceManager(private val context: Context) {
                     when (newState) {
                         BluetoothProfile.STATE_CONNECTED -> {
                             Log.d(SCAN_TAG, "Device Connected ${device.address}")
-                            deviceConnectCallback(device, true)
                             val mtu = 32 + 3 // Maximum allowed 517 - 3 bytes do BLE
-                            bluetoothGatt?.requestMtu(mtu)
-
+                            gatt.requestMtu(mtu)
                         }
                         BluetoothProfile.STATE_DISCONNECTED -> {
                             Log.d(SCAN_TAG, "Disconnected ${device.address}")
-                            deviceConnectCallback(device, false)
-                            closeConnection()
                         }
-
                     }
                     when (status) {
                         BluetoothGatt.GATT_FAILURE -> {
                             insertLogs(SCAN_TAG, "Failed to connect to ${device.address}")
-                            deviceConnectCallback(device, false)
-                            closeConnection()
                         }
                     }
                 }
@@ -170,14 +155,13 @@ class DeviceManager(private val context: Context) {
                         val characteristic =
                             service.getCharacteristic(MAIN_CHARACTERISTIC_UUID)
                         characteristic?.let {
-                            bluetoothGatt?.readCharacteristic(it)
+                            gatt.readCharacteristic(it)
                             hasServiceAndCharacteristic = true
                         }
-
                     }
                     if (!hasServiceAndCharacteristic) {
                         deviceStatusListener?.onServiceNotFound(device)
-                        closeConnection()
+                        gatt.close()
                     }
                 }
 
@@ -188,23 +172,14 @@ class DeviceManager(private val context: Context) {
                 ) {
                     if (status == BluetoothGatt.GATT_SUCCESS) {
                         handleCharacteristics(scanResult, characteristic)
+
+                        gatt.close()
                     }
                 }
-
             })
 
         return true
     }
-
-    /**
-     * Close connection with earlier connected device
-     */
-    fun closeConnection() {
-        bluetoothGatt?.close()
-        bluetoothGatt = null
-    }
-
-    private fun isDeviceConnected() = bluetoothGatt != null
 
     private fun handleCharacteristics(
         scanResult: ScanResult,
@@ -230,8 +205,6 @@ class DeviceManager(private val context: Context) {
             SCAN_TAG,
             "Received RPI from ${scanResult.device.address} RSSI ${scanResult.rssi}"
         )
-
-        closeConnection()
     }
 
 

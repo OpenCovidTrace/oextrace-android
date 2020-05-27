@@ -143,7 +143,7 @@ class BleUpdatesService : Service() {
         }
 
         peripherals[result.device] = PeripheralData(result.rssi, Date())
-        if (deviceManager.connectDevice(result, ::onBleDeviceConnect)) {
+        if (deviceManager.connectDevice(result)) {
             Log.d(
                 SCAN_TAG,
                 "Connecting to ${result.device.address}, RSSI ${result.rssi}"
@@ -164,7 +164,6 @@ class BleUpdatesService : Service() {
 
     fun stopBleService() {
         deviceManager.stopSearchDevices()
-        deviceManager.closeConnection()
         deviceManager.stopServer()
         deviceManager.stopAdvertising()
     }
