@@ -120,8 +120,6 @@ class DeviceManager(private val context: Context) {
                     super.onMtuChanged(gatt, mtu, status)
 
                     Log.d(SCAN_TAG, "Mtu Changed $mtu status $status")
-
-                    gatt?.discoverServices()
                 }
 
                 override fun onConnectionStateChange(
@@ -131,12 +129,12 @@ class DeviceManager(private val context: Context) {
                 ) {
                     when (newState) {
                         BluetoothProfile.STATE_CONNECTED -> {
-                            Log.d(SCAN_TAG, "Device Connected ${device.address}")
-                            val mtu = 32 + 3 // Maximum allowed 517 - 3 bytes do BLE
-                            gatt.requestMtu(mtu)
+                            Log.d(SCAN_TAG, "Device connected: ${device.address}")
+
+                            gatt.discoverServices()
                         }
                         BluetoothProfile.STATE_DISCONNECTED -> {
-                            Log.d(SCAN_TAG, "Disconnected ${device.address}")
+                            Log.d(SCAN_TAG, "Device disconnected: ${device.address} status $status")
                         }
                     }
                     when (status) {
@@ -147,7 +145,7 @@ class DeviceManager(private val context: Context) {
                 }
 
                 override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-                    Log.d(SCAN_TAG, "Device discovered ${device.address}")
+                    Log.d(SCAN_TAG, "Services discovered for ${device.address}")
 
                     var hasServiceAndCharacteristic = false
                     val service = gatt.getService(SERVICE_UUID)
@@ -170,6 +168,11 @@ class DeviceManager(private val context: Context) {
                     characteristic: BluetoothGattCharacteristic,
                     status: Int
                 ) {
+                    Log.d(
+                        SCAN_TAG,
+                        "Characteristic read for ${scanResult.device.address} status $status"
+                    )
+
                     if (status == BluetoothGatt.GATT_SUCCESS) {
                         handleCharacteristics(scanResult, characteristic)
 

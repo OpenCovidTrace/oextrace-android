@@ -135,7 +135,7 @@ class BleUpdatesService : Service() {
     private fun onBleDeviceFound(result: ScanResult) {
         peripherals[result.device]?.let { peripheralData ->
             if (System.currentTimeMillis() - peripheralData.date.time < 5000) {
-                Log.d(
+                Log.v(
                     SCAN_TAG,
                     "Not connecting to ${result.device.address} yet"
                 )
