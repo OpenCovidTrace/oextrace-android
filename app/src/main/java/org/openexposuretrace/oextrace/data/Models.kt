@@ -19,7 +19,7 @@ data class LogTableValue(
     val time: Date = Date(),
     @PrimaryKey(autoGenerate = true) var id: Int? = null
 ) {
-    fun getLog() = "${time.dateFullFormat()} <$tag> $text"
+    fun getLog() = "[${time.dateFullFormat()}] <$tag> $text"
 }
 
 

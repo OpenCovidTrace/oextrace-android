@@ -200,7 +200,6 @@ class MainActivity : AppCompatActivity() {
     private fun requestEnableTracking() {
         checkLocationSettings(
             TrackingService.TRACKING_LOCATION_REQUEST_BUILDER,
-            REQUEST_CHECK_TRACKING_SETTINGS,
             Runnable { this.enableTracking() },
             Runnable {
                 Toast.makeText(this, R.string.location_disabled, LENGTH_LONG).show()
@@ -213,7 +212,6 @@ class MainActivity : AppCompatActivity() {
      */
     private fun checkLocationSettings(
         requestBuilder: LocationSettingsRequest.Builder,
-        request: Int,
         onSuccess: Runnable,
         onFailure: Runnable?
     ) {
@@ -228,7 +226,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     // Show the dialog by calling startResolutionForResult(),
                     // and check the result in onActivityResult().
-                    e.startResolutionForResult(this@MainActivity, request)
+                    e.startResolutionForResult(this@MainActivity, REQUEST_CHECK_TRACKING_SETTINGS)
                 } catch (sendEx: SendIntentException) {
                     // Ignore the error.
                 }
@@ -280,7 +278,6 @@ class MainActivity : AppCompatActivity() {
             bluetoothAlert = AlertDialog.Builder(this).apply {
                 setTitle(R.string.bluetooth_turn_off)
                 setMessage(R.string.bluetooth_turn_off_description)
-                setCancelable(false)
                 setPositiveButton(R.string.enable) { _, _ ->
                     val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                     startActivityForResult(enableBtIntent, REQUEST_BLUETOOTH)

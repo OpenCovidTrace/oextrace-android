@@ -23,9 +23,8 @@ import org.openexposuretrace.oextrace.storage.UserSettingsManager
 class TrackingService : Service() {
 
     companion object {
-        const val BACKGROUND_CHANNEL_ID = "BACKGROUND_CHANNEL_ID"
-
-        const val NOTIFICATION_TRACKING_SERVICE_ID = 1
+        const val BACKGROUND_CHANNEL_ID = "SILENT_CHANNEL_LOCATION"
+        const val NOTIFICATION__ID = 2
 
         val TRACKING_LOCATION_REQUEST = LocationRequest()
 
@@ -115,8 +114,8 @@ class TrackingService : Service() {
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
                 .setContentText(getString(R.string.tracking_active))
-                .setSmallIcon(R.drawable.ic_my_location_black_24dp) // TODO custom icon
-        startForeground(NOTIFICATION_TRACKING_SERVICE_ID, builder.build())
+                .setSmallIcon(R.drawable.ic_near_me_black_24dp)
+        startForeground(NOTIFICATION__ID, builder.build())
     }
 
     override fun onCreate() {
