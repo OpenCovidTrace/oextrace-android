@@ -6,7 +6,7 @@ apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    buildToolsVersion "29.0.3"
     defaultConfig {
         applicationId "org.openexposuretrace.oextrace"
         minSdkVersion 21
@@ -67,11 +67,11 @@ dependencies {
     implementation "androidx.room:room-ktx:2.2.5"
     implementation "at.favre.lib:hkdf:1.0.2"
 
-    implementation "com.squareup.retrofit2:retrofit:2.6.2"
-    implementation "com.squareup.retrofit2:converter-gson:2.6.2"
+    implementation "com.squareup.retrofit2:retrofit:2.8.1"
+    implementation "com.squareup.retrofit2:converter-gson:2.8.1"
     implementation 'com.squareup.okhttp3:logging-interceptor:3.14.2'
     implementation 'com.github.andrefrsousa:SuperBottomSheet:1.5.0'
-    implementation 'com.google.firebase:firebase-messaging:20.1.7'
+    implementation 'com.google.firebase:firebase-messaging:20.2.0'
 
     implementation 'com.google.zxing:core:3.4.0'
     implementation 'org.greenrobot:eventbus:3.1.1'
