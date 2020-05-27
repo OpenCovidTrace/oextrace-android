@@ -10,9 +10,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.res.Configuration
 import android.location.LocationManager
-import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -23,7 +21,6 @@ import org.openexposuretrace.oextrace.data.Enums
 import org.openexposuretrace.oextrace.data.SCAN_TAG
 import org.openexposuretrace.oextrace.di.BluetoothManagerProvider
 import org.openexposuretrace.oextrace.ext.access.isNotGranted
-import org.openexposuretrace.oextrace.ext.text.dateFullFormat
 import java.util.*
 
 
@@ -33,12 +30,9 @@ class BleUpdatesService : Service() {
         private const val BACKGROUND_CHANNEL_ID = "SILENT_CHANNEL_BLE"
         private const val NOTIFICATION_ID = 1
 
-        private var isRunningInInForegroundService = false
+        private const val TAG = "BLE"
     }
 
-    private val binder: IBinder = LocalBinder()
-
-    private var changingConfiguration = false
     private var notificationManager: NotificationManager? = null
 
     private val peripherals = mutableMapOf<BluetoothDevice, PeripheralData>()
@@ -49,30 +43,17 @@ class BleUpdatesService : Service() {
 
     private val bluetoothReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            println("BluetoothReceiver onReceive")
             val action = intent.action
             if (action == BluetoothAdapter.ACTION_STATE_CHANGED) {
                 bluetoothState =
                     intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
-                println("BluetoothReceiver onReceive $bluetoothState")
-                if (serviceIsRunningInForeground()) {
-                    notificationManager?.notify(NOTIFICATION_ID, getNotification())
-                }
+
+                notificationManager?.notify(NOTIFICATION_ID, getNotification())
+
                 when (bluetoothState) {
                     BluetoothAdapter.STATE_OFF -> stopBleService()
-                    BluetoothAdapter.STATE_ON -> {
-                        startAdvertising()
-                        requestBleUpdates()
-                    }
+                    BluetoothAdapter.STATE_ON -> startBleService()
                 }
-            }
-        }
-    }
-
-    private val tickReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (serviceIsRunningInForeground()) {
-                notificationManager?.notify(NOTIFICATION_ID, getNotification())
             }
         }
     }
@@ -90,68 +71,58 @@ class BleUpdatesService : Service() {
         bluetoothState =
             if (deviceManager.checkBluetooth() == Enums.ENABLED) BluetoothAdapter.STATE_ON
             else BluetoothAdapter.STATE_OFF
-        registerReceiver(tickReceiver, IntentFilter(Intent.ACTION_TIME_TICK))
         registerReceiver(bluetoothReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        Log.i(TAG, "Start Command")
+
+        startForeground()
+
+        startBleService()
+
         return START_STICKY
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        changingConfiguration = true
-    }
+    private fun startForeground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    override fun onBind(intent: Intent): IBinder? {
-        stopForeground(true)
-        isRunningInInForegroundService = false
-        changingConfiguration = false
-        return binder
-    }
-
-    override fun onRebind(intent: Intent) {
-        stopForeground(true)
-        isRunningInInForegroundService = false
-        changingConfiguration = false
-        super.onRebind(intent)
-    }
-
-    override fun onUnbind(intent: Intent): Boolean {
-        if (!changingConfiguration) {
-            isRunningInInForegroundService = true
-            startForeground(NOTIFICATION_ID, getNotification())
+            val channel =
+                NotificationChannel(
+                    BACKGROUND_CHANNEL_ID,
+                    getString(R.string.background_channel_name),
+                    IMPORTANCE_LOW
+                )
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            notificationManager.createNotificationChannel(channel)
         }
-        return true // Ensures onRebind() is called when a client re-binds.
+
+        startForeground(NOTIFICATION_ID, getNotification())
     }
 
     private fun hasPermissions(): Boolean {
-        val notGrantedPermissions = arrayOf(
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ).filter { it.isNotGranted() }
+        val notGrantedPermissions =
+            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION).filter { it.isNotGranted() }
+
         return notGrantedPermissions.isEmpty()
     }
 
     override fun onDestroy() {
-        isRunningInInForegroundService = false
-        unregisterReceiver(tickReceiver)
         unregisterReceiver(bluetoothReceiver)
     }
 
-    fun requestBleUpdates() {
-        val locationManager =
-            getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-        val gpsEnabled =
-            locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER)
-                ?: false
+    private fun startScanning() {
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+        val gpsEnabled = locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER) ?: false
         if (hasPermissions() && gpsEnabled) {
-            startService(Intent(applicationContext, BleUpdatesService::class.java))
             deviceManager.startSearchDevices(::onBleDeviceFound)
         }
     }
 
-    fun startAdvertising() {
-        startService(Intent(applicationContext, BleUpdatesService::class.java))
+    private fun startAdvertising() {
         try {
             deviceManager.startAdvertising()
         } catch (e: Exception) {
@@ -186,36 +157,31 @@ class BleUpdatesService : Service() {
         }
     }
 
-    fun stopBleService(needStopSelf: Boolean = false) {
+    fun startBleService() {
+        startAdvertising()
+        startScanning()
+    }
+
+    fun stopBleService() {
         deviceManager.stopSearchDevices()
         deviceManager.closeConnection()
         deviceManager.stopServer()
         deviceManager.stopAdvertising()
-
-        if (needStopSelf)
-            stopSelf()
     }
 
     private fun getNotification(): Notification? {
-        val text: CharSequence = Date().dateFullFormat()
         val intent = Intent(this, MainActivity::class.java)
 
         val pendingIntent = PendingIntent.getActivity(
             this, 0,
             intent, PendingIntent.FLAG_UPDATE_CURRENT
         )
+
         val builder: NotificationCompat.Builder =
             NotificationCompat.Builder(this, BACKGROUND_CHANNEL_ID)
-                .setContentText(text)
-                .setContentTitle(getBluetoothState())
-                .setOngoing(true)
-                .setSmallIcon(R.drawable.ic_bluetooth_black_24dp)
-                .setTicker(text)
-                .setWhen(System.currentTimeMillis())
                 .setContentIntent(pendingIntent)
-        builder.priority =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) IMPORTANCE_LOW
-            else Notification.PRIORITY_LOW
+                .setContentText(getBluetoothState())
+                .setSmallIcon(R.drawable.ic_bluetooth_black_24dp)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.setCategory(Notification.CATEGORY_SERVICE)
@@ -236,12 +202,8 @@ class BleUpdatesService : Service() {
         )
     }
 
-    inner class LocalBinder : Binder() {
-        val service: BleUpdatesService get() = this@BleUpdatesService
-    }
-
-    fun serviceIsRunningInForeground(): Boolean {
-        return isRunningInInForegroundService
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
     }
 
 }

@@ -3,16 +3,13 @@ package org.openexposuretrace.oextrace
 import android.Manifest.permission
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender.SendIntentException
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import android.widget.Toast.LENGTH_LONG
@@ -56,31 +53,10 @@ class MainActivity : AppCompatActivity() {
         private const val REQUEST_BLUETOOTH = 3
     }
 
-    private var bleUpdatesService: BleUpdatesService? = null
-
     // Tracks the bound state of the service.
-    private var bound = false
     private val deviceManager by BluetoothManagerProvider()
-    private var needStartBleService = false
     private var bluetoothAlert: AlertDialog.Builder? = null
     private val contactsApiClient by ContactsApiClientProvider()
-
-    // Monitors the state of the connection to the service.
-    private val serviceConnection: ServiceConnection =
-        object : ServiceConnection {
-            override fun onServiceConnected(name: ComponentName, service: IBinder) {
-                val binder: BleUpdatesService.LocalBinder = service as BleUpdatesService.LocalBinder
-                bleUpdatesService = binder.service
-                bound = true
-                if (needStartBleService)
-                    this@MainActivity.startBleService()
-            }
-
-            override fun onServiceDisconnected(name: ComponentName) {
-                bleUpdatesService = null
-                bound = false
-            }
-        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -137,25 +113,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        bindService(
-            Intent(this, BleUpdatesService::class.java), serviceConnection,
-            Context.BIND_AUTO_CREATE
-        )
-    }
-
-    override fun onStop() {
-        if (bound) {
-            unbindService(serviceConnection)
-            bound = false
-        }
-        super.onStop()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        bleUpdatesService?.stopBleService(true)
+
+        stopBleService()
         stopTrackingService()
     }
 
@@ -184,10 +145,7 @@ class MainActivity : AppCompatActivity() {
     private fun enableTracking() {
         if (LocationAccessManager.authorized(this)) {
             startOrUpdateTrackingService()
-            if (bleUpdatesService != null)
-                startBleService()
-            else
-                needStartBleService = true
+            startBleService()
         } else {
             ActivityCompat.requestPermissions(
                 this,
@@ -236,6 +194,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun stopBleService() {
+        stopService(Intent(this, BleUpdatesService::class.java))
+    }
+
     private fun startOrUpdateTrackingService() {
         startService(Intent(this, TrackingService::class.java))
     }
@@ -253,7 +215,7 @@ class MainActivity : AppCompatActivity() {
                     ?: false
             if (gpsEnabled) {
                 when (checkBluetooth()) {
-                    ENABLED -> bleUpdatesService?.requestBleUpdates()
+                    ENABLED -> startService(Intent(this, BleUpdatesService::class.java))
                     DISABLED -> showBluetoothDisabledError()
                     NOT_FOUND -> showBluetoothNotFoundError()
                 }
@@ -264,10 +226,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun startBleService() {
         when (checkBluetooth()) {
-            ENABLED -> {
-                bleUpdatesService?.startAdvertising()
-                startSearchDevices()
-            }
+            ENABLED -> startSearchDevices()
             DISABLED -> showBluetoothDisabledError()
             NOT_FOUND -> showBluetoothNotFoundError()
         }

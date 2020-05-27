@@ -1,9 +1,6 @@
 package org.openexposuretrace.oextrace.service
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -23,15 +20,15 @@ import org.openexposuretrace.oextrace.storage.UserSettingsManager
 class TrackingService : Service() {
 
     companion object {
-        const val BACKGROUND_CHANNEL_ID = "SILENT_CHANNEL_LOCATION"
-        const val NOTIFICATION__ID = 2
+        private const val BACKGROUND_CHANNEL_ID = "SILENT_CHANNEL_LOCATION"
+        private const val NOTIFICATION_ID = 2
 
         val TRACKING_LOCATION_REQUEST = LocationRequest()
 
         val TRACKING_LOCATION_REQUEST_BUILDER: LocationSettingsRequest.Builder =
             LocationSettingsRequest.Builder().addLocationRequest(TRACKING_LOCATION_REQUEST)
 
-        const val TAG = "TRACKING"
+        private const val TAG = "TRACKING"
 
         init {
             TRACKING_LOCATION_REQUEST.maxWaitTime = 5000
@@ -111,11 +108,15 @@ class TrackingService : Service() {
 
         val builder =
             NotificationCompat.Builder(this, BACKGROUND_CHANNEL_ID)
-                .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
                 .setContentText(getString(R.string.tracking_active))
                 .setSmallIcon(R.drawable.ic_near_me_black_24dp)
-        startForeground(NOTIFICATION__ID, builder.build())
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder.setCategory(Notification.CATEGORY_SERVICE)
+        }
+
+        startForeground(NOTIFICATION_ID, builder.build())
     }
 
     override fun onCreate() {
