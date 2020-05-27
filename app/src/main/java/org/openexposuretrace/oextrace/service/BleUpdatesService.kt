@@ -40,8 +40,6 @@ class BleUpdatesService : Service() {
 
     private var changingConfiguration = false
     private var notificationManager: NotificationManager? = null
-    private var scanWorkTimer: Timer? = null
-    private var scanPauseTimer: Timer? = null
 
     private val peripherals = mutableMapOf<BluetoothDevice, PeripheralData>()
 
@@ -193,10 +191,7 @@ class BleUpdatesService : Service() {
         deviceManager.closeConnection()
         deviceManager.stopServer()
         deviceManager.stopAdvertising()
-        scanWorkTimer?.cancel()
-        scanWorkTimer = null
-        scanPauseTimer?.cancel()
-        scanPauseTimer = null
+
         if (needStopSelf)
             stopSelf()
     }
