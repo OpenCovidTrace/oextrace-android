@@ -129,12 +129,15 @@ class DeviceManager(private val context: Context) {
                 ) {
                     when (newState) {
                         BluetoothProfile.STATE_CONNECTED -> {
-                            Log.d(SCAN_TAG, "Device connected: ${device.address}")
+                            insertLogs(SCAN_TAG, "Device connected: ${device.address}")
 
                             gatt.discoverServices()
                         }
                         BluetoothProfile.STATE_DISCONNECTED -> {
-                            Log.d(SCAN_TAG, "Device disconnected: ${device.address} status $status")
+                            insertLogs(
+                                SCAN_TAG,
+                                "Device disconnected: ${device.address} status $status"
+                            )
                         }
                     }
                     when (status) {
