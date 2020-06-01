@@ -10,6 +10,7 @@ import com.andrefrsousa.superbottomsheet.SuperBottomSheetFragment
 import kotlinx.android.synthetic.main.fragment_logs.*
 import org.openexposuretrace.oextrace.R
 import org.openexposuretrace.oextrace.ext.ui.confirm
+import org.openexposuretrace.oextrace.ext.ui.shareText
 
 
 class LogsFragment : SuperBottomSheetFragment() {
@@ -23,8 +24,9 @@ class LogsFragment : SuperBottomSheetFragment() {
         savedInstanceState: Bundle?
     ): View? {
         super.onCreateView(inflater, container, savedInstanceState)
-        logsViewModel =
-            ViewModelProvider(this).get(LogsViewModel::class.java)
+
+        logsViewModel = ViewModelProvider(this).get(LogsViewModel::class.java)
+
         return inflater.inflate(R.layout.fragment_logs, container, false)
     }
 
@@ -34,13 +36,27 @@ class LogsFragment : SuperBottomSheetFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         logRecyclerView.adapter = logsAdapter
+
         logsViewModel.logsLiveData.observe(this, Observer { logs ->
             logsAdapter.setItems(logs)
         })
+
         closeImageButton.setOnClickListener { dismiss() }
+
+        shareImageButton.setOnClickListener {
+            requireActivity().shareText(
+                logsViewModel.logsLiveData.value?.joinToString(separator = "\n") {
+                    it.getLog()
+                } ?: ""
+            )
+        }
+
         clearImageButton.setOnClickListener {
-            confirm(R.string.clear_logs) { logsViewModel.removeOldContacts() }
+            confirm(R.string.clear_logs) {
+                logsViewModel.removeOldContacts()
+            }
         }
     }
 

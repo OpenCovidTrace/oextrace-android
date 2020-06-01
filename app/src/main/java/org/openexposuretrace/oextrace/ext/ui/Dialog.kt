@@ -1,10 +1,21 @@
 package org.openexposuretrace.oextrace.ext.ui
 
 import android.app.Activity
+import android.content.Intent
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import org.openexposuretrace.oextrace.R
+
+fun Activity.shareText(text: String) {
+    val share = Intent(Intent.ACTION_SEND)
+
+    share.type = "text/plain"
+    share.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
+    share.putExtra(Intent.EXTRA_TEXT, text)
+
+    startActivity(Intent.createChooser(share, null))
+}
 
 fun Fragment.showInfo(@StringRes messageId: Int) {
     activity?.showInfo(getString(messageId))
