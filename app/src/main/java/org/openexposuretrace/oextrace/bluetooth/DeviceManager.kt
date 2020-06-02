@@ -10,6 +10,7 @@ import org.openexposuretrace.oextrace.data.ADV_TAG
 import org.openexposuretrace.oextrace.data.Enums
 import org.openexposuretrace.oextrace.data.SCAN_TAG
 import org.openexposuretrace.oextrace.ext.data.insertLogs
+import org.openexposuretrace.oextrace.ext.logEvent
 import org.openexposuretrace.oextrace.storage.BtContactsManager
 import org.openexposuretrace.oextrace.storage.BtEncounter
 import org.openexposuretrace.oextrace.utils.CryptoUtil
@@ -165,6 +166,8 @@ class DeviceManager(private val context: Context) {
                                 "Sent RPI to ${device.address}"
                             )
 
+                            context.logEvent("sent_rpi_scan")
+
                             hasServiceAndCharacteristic = true
                         }
                     }
@@ -234,6 +237,8 @@ class DeviceManager(private val context: Context) {
             SCAN_TAG,
             "Received RPI from ${scanResult.device.address} RSSI ${scanResult.rssi}"
         )
+
+        context.logEvent("received_rpi_scan")
     }
 
     interface DeviceStatusListener {
@@ -373,6 +378,8 @@ class DeviceManager(private val context: Context) {
                         ADV_TAG,
                         "Sent RPI to ${device.address}"
                     )
+
+                    context.logEvent("sent_rpi_adv")
                 }
                 else -> {
                     // Invalid characteristic
@@ -434,6 +441,8 @@ class DeviceManager(private val context: Context) {
                             ADV_TAG,
                             "Received RPI from ${device.address}"
                         )
+
+                        context.logEvent("received_rpi_adv")
 
                         bluetoothGattServer?.sendResponse(
                             device,
