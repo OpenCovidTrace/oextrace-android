@@ -156,7 +156,15 @@ class DeviceManager(private val context: Context) {
                         val characteristic =
                             service.getCharacteristic(MAIN_CHARACTERISTIC_UUID)
                         characteristic?.let {
-                            gatt.readCharacteristic(it)
+                            characteristic.value = CryptoUtil.getCurrentRpi()
+
+                            gatt.writeCharacteristic(it)
+
+                            insertLogs(
+                                SCAN_TAG,
+                                "Sent RPI to ${device.address}"
+                            )
+
                             hasServiceAndCharacteristic = true
                         }
                     }
@@ -177,9 +185,24 @@ class DeviceManager(private val context: Context) {
                     )
 
                     if (status == BluetoothGatt.GATT_SUCCESS) {
-                        handleCharacteristics(scanResult, characteristic)
+                        handleCharacteristicRead(scanResult, characteristic)
 
                         gatt.close()
+                    }
+                }
+
+                override fun onCharacteristicWrite(
+                    gatt: BluetoothGatt,
+                    characteristic: BluetoothGattCharacteristic,
+                    status: Int
+                ) {
+                    Log.d(
+                        SCAN_TAG,
+                        "Characteristic write for ${scanResult.device.address} status $status"
+                    )
+
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        gatt.readCharacteristic(characteristic)
                     }
                 }
             })
@@ -187,7 +210,7 @@ class DeviceManager(private val context: Context) {
         return true
     }
 
-    private fun handleCharacteristics(
+    private fun handleCharacteristicRead(
         scanResult: ScanResult,
         characteristic: BluetoothGattCharacteristic
     ) {
@@ -212,7 +235,6 @@ class DeviceManager(private val context: Context) {
             "Received RPI from ${scanResult.device.address} RSSI ${scanResult.rssi}"
         )
     }
-
 
     interface DeviceStatusListener {
         fun onDataReceived(device: BluetoothDevice, bytes: ByteArray)
@@ -310,8 +332,8 @@ class DeviceManager(private val context: Context) {
 
         val characteristic = BluetoothGattCharacteristic(
             MAIN_CHARACTERISTIC_UUID,
-            BluetoothGattCharacteristic.PROPERTY_READ,
-            BluetoothGattCharacteristic.PERMISSION_READ
+            BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_WRITE,
+            BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE
         )
 
         service.addCharacteristic(characteristic)
@@ -369,10 +391,87 @@ class DeviceManager(private val context: Context) {
             }
         }
 
-        override fun onExecuteWrite(device: BluetoothDevice?, requestId: Int, execute: Boolean) {
-            super.onExecuteWrite(device, requestId, execute)
+        override fun onCharacteristicWriteRequest(
+            device: BluetoothDevice,
+            requestId: Int,
+            characteristic: BluetoothGattCharacteristic,
+            preparedWrite: Boolean,
+            responseNeeded: Boolean,
+            offset: Int,
+            value: ByteArray?
+        ) {
+            when (characteristic.uuid) {
+                MAIN_CHARACTERISTIC_UUID -> {
+                    value?.let { data ->
+                        if (data.size != CryptoUtil.KEY_LENGTH * 2) {
+                            insertLogs(
+                                ADV_TAG,
+                                "Received unexpected data length: ${data.size}"
+                            )
 
-            Log.d(ADV_TAG, "Execute Write ${device?.address ?: ""}")
+                            bluetoothGattServer?.sendResponse(
+                                device,
+                                requestId,
+                                BluetoothGatt.GATT_FAILURE,
+                                0,
+                                null
+                            )
+
+                            return
+                        }
+
+                        val rollingId =
+                            data.sliceArray(0 until CryptoUtil.KEY_LENGTH).base64EncodedString()
+                        val meta =
+                            data.sliceArray(CryptoUtil.KEY_LENGTH until CryptoUtil.KEY_LENGTH * 2)
+                                .base64EncodedString()
+
+                        val day = CryptoUtil.currentDayNumber()
+                        // TODO get rssi somehow
+                        BtContactsManager.addContact(rollingId, day, BtEncounter(0, meta))
+
+                        insertLogs(
+                            ADV_TAG,
+                            "Received RPI from ${device.address}"
+                        )
+
+                        bluetoothGattServer?.sendResponse(
+                            device,
+                            requestId,
+                            BluetoothGatt.GATT_SUCCESS,
+                            0,
+                            null
+                        )
+                    } ?: run {
+                        insertLogs(
+                            ADV_TAG,
+                            "Invalid Characteristic Write ${characteristic.uuid}"
+                        )
+
+                        bluetoothGattServer?.sendResponse(
+                            device,
+                            requestId,
+                            BluetoothGatt.GATT_FAILURE,
+                            0,
+                            null
+                        )
+                    }
+                }
+                else -> {
+                    // Invalid characteristic
+                    insertLogs(
+                        ADV_TAG,
+                        "Invalid Characteristic Write ${characteristic.uuid}"
+                    )
+                    bluetoothGattServer?.sendResponse(
+                        device,
+                        requestId,
+                        BluetoothGatt.GATT_FAILURE,
+                        0,
+                        null
+                    )
+                }
+            }
         }
     }
 
