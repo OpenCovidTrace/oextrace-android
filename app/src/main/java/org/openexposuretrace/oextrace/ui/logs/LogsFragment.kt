@@ -1,4 +1,4 @@
-package org.openexposuretrace.oextrace.ui.map.logs
+package org.openexposuretrace.oextrace.ui.logs
 
 import android.os.Bundle
 import android.view.LayoutInflater

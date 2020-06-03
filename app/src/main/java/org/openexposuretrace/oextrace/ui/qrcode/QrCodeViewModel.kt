@@ -1,4 +1,4 @@
-package org.openexposuretrace.oextrace.ui.map.qrcode
+package org.openexposuretrace.oextrace.ui.qrcode
 
 import android.graphics.Bitmap
 import android.graphics.Color

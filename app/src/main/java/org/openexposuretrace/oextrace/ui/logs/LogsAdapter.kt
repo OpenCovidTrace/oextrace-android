@@ -1,4 +1,4 @@
-package org.openexposuretrace.oextrace.ui.map.logs
+package org.openexposuretrace.oextrace.ui.logs
 
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
