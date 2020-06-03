@@ -6,6 +6,8 @@ import androidx.room.PrimaryKey
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
 import org.openexposuretrace.oextrace.ext.text.dateFullFormat
+import org.openexposuretrace.oextrace.storage.BtContact
+import org.openexposuretrace.oextrace.storage.QrContact
 import java.util.*
 import kotlin.math.roundToInt
 

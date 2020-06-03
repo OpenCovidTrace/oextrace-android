@@ -47,8 +47,10 @@ import org.openexposuretrace.oextrace.location.LocationUpdateManager
 import org.openexposuretrace.oextrace.service.BleUpdatesService
 import org.openexposuretrace.oextrace.service.TrackingService
 import org.openexposuretrace.oextrace.storage.*
+import org.openexposuretrace.oextrace.ui.contacts.ContactsFragment
 import org.openexposuretrace.oextrace.ui.logs.LogsFragment
 import org.openexposuretrace.oextrace.ui.qrcode.QrCodeFragment
+import org.openexposuretrace.oextrace.ui.settings.SettingsFragment
 import org.openexposuretrace.oextrace.utils.CryptoUtil
 import org.openexposuretrace.oextrace.utils.CryptoUtil.base64DecodeByteArray
 import org.openexposuretrace.oextrace.utils.CryptoUtil.base64EncodedString
@@ -92,6 +94,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         EventBus.getDefault().register(this)
         logsButton.setOnClickListener { showLogs() }
         recordContactButton.setOnClickListener { showQrCode() }
+        contactsButton.setOnClickListener { showContacts() }
+        settingsButton.setOnClickListener { showSettings() }
 
         zoomInButton.setOnClickListener {
             googleMap?.let { map ->
@@ -370,11 +374,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         return polylines
     }
 
+    // TODO replace with LiveData
     fun updateContacts() {
         mkContactPoints.forEach { it.remove() }
         mkContactPoints.clear()
 
-        BtContactsManager.getContacts().values.forEach { contact ->
+        BtContactsManager.contacts.values.forEach { contact ->
             contact.encounters.forEach { encounter ->
                 ifAllNotNull(encounter.metaData, encounter.metaData?.coord) { metaData, coord ->
                     googleMap?.addMarker(
@@ -392,7 +397,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
 
-        QrContactsManager.getContacts().forEach { contact ->
+        QrContactsManager.contacts.forEach { contact ->
             ifAllNotNull(contact.metaData, contact.metaData?.coord) { metaData, coord ->
                 googleMap?.addMarker(
                     MarkerOptions().position(coord.coordinate())
@@ -516,6 +521,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun showQrCode() {
         val dialog = QrCodeFragment()
+        dialog.show(supportFragmentManager, dialog.tag)
+    }
+
+    private fun showContacts() {
+        val dialog = ContactsFragment()
+        dialog.show(supportFragmentManager, dialog.tag)
+    }
+
+    private fun showSettings() {
+        val dialog = SettingsFragment()
         dialog.show(supportFragmentManager, dialog.tag)
     }
 

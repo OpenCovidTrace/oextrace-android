@@ -1,8 +1,11 @@
 package org.openexposuretrace.oextrace.storage
 
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import com.google.gson.Gson
 import org.openexposuretrace.oextrace.data.ContactCoord
 import org.openexposuretrace.oextrace.data.ContactMetaData
+import org.openexposuretrace.oextrace.ui.contacts.Contact
 import org.openexposuretrace.oextrace.utils.CryptoUtil
 import org.openexposuretrace.oextrace.utils.CryptoUtil.base64DecodeByteArray
 import org.openexposuretrace.oextrace.utils.CryptoUtil.base64EncodedString
@@ -11,28 +14,38 @@ object QrContactsManager : PreferencesHolder("qr-contacts") {
 
     private const val CONTACTS = "contacts"
 
-    fun getContacts(): List<QrContact> {
-        val jsonString = getString(CONTACTS)
-        (Gson().fromJson(jsonString) as? List<QrContact>)?.let {
-            return it
-        } ?: kotlin.run { return arrayListOf() }
+    private val liveData = MutableLiveData(contacts)
+
+    val contactsLiveData = Transformations.map(liveData) { contacts ->
+        contacts.map {
+            it.toContact()
+        }
     }
 
-    fun setContacts(newValue: List<QrContact>) {
-        val hashMapString = Gson().toJson(newValue)
-        setString(CONTACTS, hashMapString)
-    }
+    var contacts: List<QrContact>
+        get() {
+            val jsonString = getString(CONTACTS)
+            (Gson().fromJson(jsonString) as? List<QrContact>)?.let {
+                return it
+            } ?: kotlin.run { return arrayListOf() }
+        }
+        set(value) {
+            val hashMapString = Gson().toJson(value)
+            setString(CONTACTS, hashMapString)
+
+            liveData.postValue(value)
+        }
 
     fun removeOldContacts() {
         val expirationDay = DataManager.expirationDay()
 
-        val newContacts = getContacts().filter { it.day > expirationDay }
+        val newContacts = contacts.filter { it.day > expirationDay }
 
-        setContacts(newContacts)
+        contacts = newContacts
     }
 
     fun matchContacts(keysData: KeysData): Pair<Boolean, ContactCoord?> {
-        val newContacts = getContacts()
+        val newContacts = contacts
 
         var hasExposure = false
         var lastExposedContactCoord: ContactCoord? = null
@@ -41,7 +54,12 @@ object QrContactsManager : PreferencesHolder("qr-contacts") {
             keysData.keys.filter {
                 it.day == contact.day
             }.forEach { key ->
-                if (CryptoUtil.match(contact.rollingId, contact.day, key.value.base64DecodeByteArray())) {
+                if (CryptoUtil.match(
+                        contact.rollingId,
+                        contact.day,
+                        key.value.base64DecodeByteArray()
+                    )
+                ) {
                     contact.exposed = true
 
                     key.meta?.let { metaKey ->
@@ -60,17 +78,17 @@ object QrContactsManager : PreferencesHolder("qr-contacts") {
             }
         }
 
-        setContacts(newContacts)
+        contacts = newContacts
 
         return Pair(hasExposure, lastExposedContactCoord)
     }
 
     fun addContact(contact: QrContact) {
-        val newContacts = getContacts().toMutableList()
+        val newContacts = contacts.toMutableList()
 
         newContacts.add(contact)
 
-        setContacts(newContacts)
+        contacts = newContacts
     }
 
 }
@@ -93,5 +111,9 @@ data class QrContact(
                     .base64EncodedString()
             )
         }
+    }
+
+    fun toContact(): Contact {
+        return Contact(btContact = null, qrContact = this)
     }
 }

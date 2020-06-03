@@ -37,7 +37,7 @@ class LogsFragment : SuperBottomSheetFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        logRecyclerView.adapter = logsAdapter
+        logsRecyclerView.adapter = logsAdapter
 
         logsViewModel.logsLiveData.observe(this, Observer { logs ->
             logsAdapter.setItems(logs)

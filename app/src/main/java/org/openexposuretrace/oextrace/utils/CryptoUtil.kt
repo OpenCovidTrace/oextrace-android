@@ -72,6 +72,8 @@ object CryptoUtil {
 
     fun getDayNumber(date: Date) = getDayNumber(date.time)
 
+    fun getDate(dayNumber: Int) = Date(dayNumber.toLong() * DAY_SECONDS * 1000)
+
     fun currentDayNumber() = ((System.currentTimeMillis() / 1000) / DAY_SECONDS).toInt()
 
     private fun getEnIntervalNumber(date: Date) =

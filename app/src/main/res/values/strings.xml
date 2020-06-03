@@ -18,6 +18,7 @@
     <string name="close">Close</string>
     <string name="clear">Clear</string>
     <string name="logs">Logs</string>
+    <string name="contacts">Contacts</string>
     <string name="bluetooth_off">Bluetooth off</string>
     <string name="turning_bluetooth_off">Turning Bluetooth off…</string>
     <string name="bluetooth_on">Bluetooth on</string>
@@ -45,6 +46,12 @@
 
     <!-- LogsFragment -->
     <string name="clear_logs">Are you sure you want to clear all logs?</string>
+
+    <!-- ContactsFragment -->
+    <string name="exposed">Exposed</string>
+    <string name="bt_contact">Bluetooth Contact</string>
+    <string name="qr_contact">QR Contact</string>
+    <string name="encounters">Encounters: %d</string>
 
     <!-- StatusFragment -->
     <string name="settings">Settings:</string>

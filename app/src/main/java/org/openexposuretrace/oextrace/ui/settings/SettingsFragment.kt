@@ -1,12 +1,12 @@
-package org.openexposuretrace.oextrace.ui.status
+package org.openexposuretrace.oextrace.ui.settings
 
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.fragment_status.*
+import com.andrefrsousa.superbottomsheet.SuperBottomSheetFragment
+import kotlinx.android.synthetic.main.fragment_settings.*
 import org.openexposuretrace.oextrace.R
 import org.openexposuretrace.oextrace.ext.ui.choose
 import org.openexposuretrace.oextrace.ext.ui.confirm
@@ -16,14 +16,16 @@ import org.openexposuretrace.oextrace.storage.KeysManager
 import org.openexposuretrace.oextrace.storage.TracksManager
 import org.openexposuretrace.oextrace.storage.UserSettingsManager
 
-class StatusFragment : Fragment() {
+class SettingsFragment : SuperBottomSheetFragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_status, container, false)
+        super.onCreateView(inflater, container, savedInstanceState)
+
+        return inflater.inflate(R.layout.fragment_settings, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -45,6 +47,8 @@ class StatusFragment : Fragment() {
         }
 
         refreshStatus()
+
+        closeImageButton.setOnClickListener { dismiss() }
     }
 
     override fun onResume() {
@@ -52,6 +56,10 @@ class StatusFragment : Fragment() {
 
         // This value could've change through on-boarding so we have to force refresh
         recordTrackSwitch.isChecked = UserSettingsManager.recordTrack
+    }
+
+    override fun isSheetAlwaysExpanded(): Boolean {
+        return true
     }
 
     private fun changeStatus() {

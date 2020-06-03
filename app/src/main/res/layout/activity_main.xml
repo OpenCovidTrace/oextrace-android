@@ -79,16 +79,38 @@
         app:layout_constraintTop_toBottomOf="@id/recordContactButton" />
 
     <ImageButton
-        android:id="@+id/logsButton"
+        android:id="@+id/contactsButton"
         android:layout_width="@dimen/map_input_size"
         android:layout_height="@dimen/map_input_size"
         android:layout_marginEnd="@dimen/margin_regular"
         android:background="@drawable/bg_secondary_button"
-        android:contentDescription="@string/logs"
-        android:src="@drawable/ic_bluetooth_black_24dp"
+        android:contentDescription="@string/contacts"
+        android:src="@drawable/ic_people_black_24dp"
         android:tint="@color/colorAccent"
         app:layout_constraintBottom_toBottomOf="@id/recordContactButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/recordContactButton" />
+
+    <ImageButton
+        android:id="@+id/logsButton"
+        android:layout_width="@dimen/map_input_size"
+        android:layout_height="@dimen/map_input_size"
+        android:layout_marginBottom="@dimen/margin_regular"
+        android:background="@drawable/bg_secondary_button"
+        android:contentDescription="@string/logs"
+        android:src="@drawable/ic_bluetooth_black_24dp"
+        app:layout_constraintBottom_toTopOf="@id/contactsButton"
+        app:layout_constraintStart_toStartOf="@id/contactsButton" />
+
+    <ImageButton
+        android:id="@+id/settingsButton"
+        android:layout_width="@dimen/map_input_size"
+        android:layout_height="@dimen/map_input_size"
+        android:layout_marginBottom="@dimen/margin_small"
+        android:background="@drawable/bg_secondary_button"
+        android:contentDescription="@string/settings"
+        android:src="@drawable/ic_settings_black_24dp"
+        app:layout_constraintBottom_toTopOf="@id/logsButton"
+        app:layout_constraintStart_toStartOf="@id/logsButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
